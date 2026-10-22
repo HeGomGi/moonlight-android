@@ -40,8 +40,24 @@ public class PanZoomHandler {
     }
 
     public void handleTouchEvent(MotionEvent motionEvent) {
-        scaleGestureDetector.onTouchEvent(motionEvent);
+        handleScaleEvent(motionEvent);
         gestureDetector.onTouchEvent(motionEvent);
+    }
+
+    // Allow clients to use pinch-to-zoom without enabling gesture-based panning.
+    public void handleScaleEvent(MotionEvent motionEvent) {
+        scaleGestureDetector.onTouchEvent(motionEvent);
+    }
+
+    // Reuse the same viewport bounds as touch panning for edge-push navigation.
+    public void panBy(float deltaX, float deltaY) {
+        childX = streamView.getX() + deltaX;
+        childY = streamView.getY() + deltaY;
+
+        streamView.setX(childX);
+        streamView.setY(childY);
+
+        constrainToBounds();
     }
 
     private void updateDimensions() {
@@ -145,13 +161,7 @@ public class PanZoomHandler {
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            childX = streamView.getX() - distanceX;
-            childY = streamView.getY() - distanceY;
-
-            streamView.setX(childX);
-            streamView.setY(childY);
-
-            constrainToBounds();
+            panBy(-distanceX, -distanceY);
             return true;
         }
     }
